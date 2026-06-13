@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#EFF6FF" />
+  <title>Flash Card Quiz</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #EFF6FF 0%, #EDE9FE 100%);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button { font-family: inherit; -webkit-appearance: none; appearance: none; }
+
+    /* ── START SCREEN ── */
+    #start-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.25rem;
+    }
+    .start-card {
+      background: #fff;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      padding: 2.5rem 1.75rem;
+      max-width: 440px; width: 100%;
+      text-align: center;
+    }
+    .start-emoji { font-size: 3.5rem; margin-bottom: 0.5rem; }
+    .start-title { font-size: 1.75rem; font-weight: 800; color: #1E293B; margin-bottom: 0.25rem; }
+    .start-sub { color: #64748B; font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .stats-box {
+      background: #F8FAFF; border-radius: 1rem; padding: 1rem;
+      margin-bottom: 1.5rem; border: 1px solid #E0E7FF;
+      display: flex; justify-content: space-around;
+    }
+    .stat-num { font-size: 1.5rem; font-weight: 800; }
+    .stat-label { font-size: 0.75rem; color: #64748B; }
+    .divider { width: 1px; background: #E2E8F0; }
+    .btn-primary {
+      width: 100%; padding: 1rem 1.5rem;
+      border: none; border-radius: 0.875rem;
+      font-weight: 700; font-size: 1rem; cursor: pointer;
+      background: #2563EB; color: #fff;
+      margin-bottom: 0.75rem; transition: opacity .15s;
+      min-height: 52px;
+    }
+    .btn-secondary {
+      width: 100%; padding: 1rem 1.5rem;
+      border: none; border-radius: 0.875rem;
+      font-weight: 700; font-size: 1rem; cursor: pointer;
+      background: #7C3AED; color: #fff;
+      transition: opacity .15s; min-height: 52px;
+    }
+    .btn-primary:active, .btn-secondary:active { opacity: 0.82; }
+    .start-hint { margin-top: 1.25rem; font-size: 0.78rem; color: #94A3B8; }
+
+    /* ── QUIZ SCREEN ── */
+    #quiz-screen { display: none; padding: 1rem; padding-bottom: 2rem; }
+    .quiz-inner { max-width: 640px; margin: 0 auto; }
+
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .topbar-counter { font-size: 0.85rem; color: #64748B; font-weight: 600; }
+    .topbar-score { font-size: 0.85rem; font-weight: 700; color: #2563EB; }
+
+    .progress-track {
+      background: #E2E8F0; border-radius: 100px; height: 6px;
+      margin-bottom: 1.25rem; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, #2563EB, #7C3AED);
+      transition: width .4s ease;
+    }
+
+    .card {
+      background: #fff; border-radius: 1.5rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.10); overflow: hidden;
+    }
+    .cat-header {
+      padding: 0.75rem 1.25rem;
+      display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .cat-label { color: #fff; font-size: 0.8rem; font-weight: 700; }
+    .multi-badge {
+      background: rgba(255,255,255,0.2); color: #fff;
+      font-size: 0.7rem; border-radius: 100px; padding: 0.2rem 0.6rem; font-weight: 600;
+    }
+    .question-box { padding: 1.25rem 1.25rem 0.75rem; }
+    .question-text { font-size: 1rem; font-weight: 700; color: #1E293B; line-height: 1.55; }
+    .options-box { padding: 0 1.25rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .opt-btn {
+      border: 2px solid #E2E8F0; background: #fff;
+      border-radius: 0.875rem; padding: 0.85rem 1rem;
+      display: flex; align-items: flex-start; gap: 0.625rem;
+      cursor: pointer; text-align: left; width: 100%;
+      transition: border-color .15s, background .15s;
+      min-height: 52px;
+    }
+    .opt-btn:active { opacity: 0.85; }
+    .opt-indicator { font-weight: 700; font-size: 1rem; flex-shrink: 0; margin-top: 1px; min-width: 16px; }
+    .opt-text { font-size: 0.9rem; color: #334155; line-height: 1.5; }
+
+    .explanation-box {
+      margin: 0 1.25rem 1rem; padding: 1rem;
+      border-radius: 1rem; border: 1px solid;
+    }
+    .explanation-title { font-weight: 700; margin-bottom: 0.4rem; font-size: 0.9rem; }
+    .explanation-text { font-size: 0.875rem; line-height: 1.6; color: #374151; }
+
+    .action-box { padding: 0 1.25rem 1.25rem; }
+    .action-btn {
+      width: 100%; padding: 1rem; border-radius: 0.875rem;
+      border: none; font-weight: 700; font-size: 1rem; cursor: pointer;
+      color: #fff; transition: opacity .15s; min-height: 52px;
+    }
+    .action-btn:disabled { background: #E2E8F0 !important; color: #94A3B8; cursor: not-allowed; }
+    .action-btn:active:not(:disabled) { opacity: 0.85; }
+    .quiz-footer { text-align: center; margin-top: 1rem; font-size: 0.75rem; color: #94A3B8; }
+
+    /* ── DONE SCREEN ── */
+    #done-screen {
+      display: none; min-height: 100vh;
+      align-items: center; justify-content: center; padding: 1.25rem;
+    }
+    .done-card {
+      background: #fff; border-radius: 1.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      padding: 2.5rem 1.75rem; max-width: 440px; width: 100%; text-align: center;
+    }
+    .done-emoji { font-size: 4rem; margin-bottom: 0.5rem; }
+    .done-title { font-size: 1.5rem; font-weight: 800; color: #1E293B; margin-bottom: 0.5rem; }
+    .done-score { font-size: 3rem; font-weight: 900; margin-bottom: 0.25rem; }
+    .done-pct { color: #64748B; margin-bottom: 1.25rem; }
+    .done-bar-track { background: #F1F5F9; border-radius: 100px; height: 10px; margin-bottom: 1.25rem; overflow: hidden; }
+    .done-bar-fill { height: 100%; border-radius: 100px; transition: width 1s ease; }
+    .done-msg { color: #475569; margin-bottom: 1.5rem; }
+    .done-actions { display: flex; flex-direction: column; gap: 0.75rem; }
+    .done-btn-primary {
+      background: #2563EB; color: #fff; border: none;
+      border-radius: 0.875rem; padding: 1rem; font-weight: 700;
+      font-size: 1rem; cursor: pointer; min-height: 52px;
+      transition: opacity .15s;
+    }
+    .done-btn-purple {
+      background: transparent; color: #7C3AED;
+      border: 2px solid #7C3AED; border-radius: 0.875rem;
+      padding: calc(1rem - 2px); font-weight: 700; font-size: 1rem;
+      cursor: pointer; min-height: 52px; transition: opacity .15s;
+    }
+    .done-btn-back {
+      background: transparent; color: #64748B;
+      border: 2px solid #E2E8F0; border-radius: 0.875rem;
+      padding: calc(1rem - 2px); font-weight: 600; font-size: 0.95rem;
+      cursor: pointer; min-height: 52px; transition: opacity .15s;
+    }
+    .done-btn-primary:active, .done-btn-purple:active, .done-btn-back:active { opacity: 0.82; }
+  </style>
+</head>
+<body>
+
+<!-- ══ START SCREEN ══ -->
+<div id="start-screen">
+  <div class="start-card">
+    <div class="start-emoji">🎓</div>
+    <h1 class="start-title">Flash Card Quiz</h1>
+    <p class="start-sub">Teoria del Computer · Word &amp; Tastiera</p>
+    <div class="stats-box">
+      <div><div class="stat-num" style="color:#2563EB">45</div><div class="stat-label">Domande</div></div>
+      <div class="divider"></div>
+      <div><div class="stat-num" style="color:#7C3AED">2</div><div class="stat-label">Categorie</div></div>
+      <div class="divider"></div>
+      <div><div class="stat-num" style="color:#059669">∞</div><div class="stat-label">Tentativi</div></div>
+    </div>
+    <button class="btn-primary" onclick="startQuiz('normal')">📋 Inizia in ordine</button>
+    <button class="btn-secondary" onclick="startQuiz('shuffle')">🔀 Ordine casuale</button>
+    <p class="start-hint">Dopo ogni risposta riceverai una spiegazione dettagliata</p>
+  </div>
+</div>
+
+<!-- ══ QUIZ SCREEN ══ -->
+<div id="quiz-screen">
+  <div class="quiz-inner">
+    <div class="topbar">
+      <span class="topbar-counter" id="q-counter"></span>
+      <span class="topbar-score" id="q-score"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="card">
+      <div class="cat-header" id="cat-header">
+        <span class="cat-label" id="cat-label"></span>
+        <span class="multi-badge" id="multi-badge" style="display:none">☑ Selezione multipla</span>
+      </div>
+      <div class="question-box">
+        <p class="question-text" id="question-text"></p>
+      </div>
+      <div class="options-box" id="options-box"></div>
+      <div id="explanation-box" style="display:none"></div>
+      <div class="action-box">
+        <button class="action-btn" id="action-btn" onclick="handleAction()"></button>
+      </div>
+    </div>
+    <p class="quiz-footer" id="quiz-footer"></p>
+  </div>
+</div>
+
+<!-- ══ DONE SCREEN ══ -->
+<div id="done-screen">
+  <div class="done-card">
+    <div class="done-emoji" id="done-emoji"></div>
+    <h2 class="done-title">Quiz completato!</h2>
+    <div class="done-score" id="done-score"></div>
+    <div class="done-pct" id="done-pct"></div>
+    <div class="done-bar-track"><div class="done-bar-fill" id="done-bar"></div></div>
+    <p class="done-msg" id="done-msg"></p>
+    <div class="done-actions">
+      <button class="done-btn-primary" onclick="startQuiz('normal')">🔄 Ricomincia in ordine</button>
+      <button class="done-btn-purple" onclick="startQuiz('shuffle')">🔀 Ricomincia in ordine casuale</button>
+      <button class="done-btn-back" onclick="showStart()">← Torna all'inizio</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { id:1, category:"computer", question:"Le prestazioni della CPU si misurano in:", type:"single", options:["Sievert (e suoi multipli)","Hertz (e suoi multipli)","Byte (e suoi multipli)"], correct:[1], explanation:"L'Hertz (Hz) misura la frequenza del clock del processore, cioè quanti cicli al secondo riesce a completare. Le CPU moderne lavorano in GHz (miliardi di Hz). I Sievert misurano le radiazioni ionizzanti; i Byte misurano la capacità di memoria, non la velocità." },
+  { id:2, category:"computer", question:"Cosa sono gli Appunti (clipboard)?", type:"single", options:["Un'area di memoria che può contenere temporaneamente solo testo","Un'area di memoria che può contenere temporaneamente testo e immagini","Un'area di memoria che può contenere solo immagini"], correct:[1], explanation:"Gli Appunti (clipboard) sono un'area di memoria temporanea del sistema operativo che può contenere sia testo che immagini (e altri tipi di dati). Si usano con le operazioni Copia (Ctrl+C), Taglia (Ctrl+X) e Incolla (Ctrl+V)." },
+  { id:3, category:"computer", question:"Disco rigido e RAM presentano differenze in velocità di lettura e capacità. Seleziona le affermazioni corrette:", type:"multi", options:["Il disco rigido ha maggiore capacità","Il disco rigido ha maggiore velocità di lettura","La RAM ha maggiore velocità di lettura","La RAM ha maggiore capacità"], correct:[0,2], explanation:"L'hard disk ha capacità molto maggiore (centinaia di GB o TB) ma è lento da leggere. La RAM è velocissima (accesso in nanosecondi) ma ha capacità inferiore (tipicamente 8–32 GB) ed è volatile: perde i dati allo spegnimento." },
+  { id:4, category:"computer", question:"Il Byte: (seleziona tutte le risposte corrette)", type:"multi", options:["È l'insieme di 10 bit","Può assumere 256 valori possibili","Può assumere 1024 valori possibili","È l'insieme di 8 bit"], correct:[1,3], explanation:"Un Byte è composto da 8 bit. Con 8 bit si possono rappresentare 2⁸ = 256 valori distinti (da 0 a 255). Il 1024 indica quanti Byte ci sono in un Kilobyte, non i valori di un singolo Byte." },
+  { id:5, category:"computer", question:"Mainframe si riferisce a:", type:"single", options:["Una parte fondamentale della scheda madre","Un grande elaboratore utilizzato per gestire medie e grandi imprese","La parte principale di un programma software"], correct:[1], explanation:"Un Mainframe è un computer di grandi dimensioni, potenza e affidabilità, usato da banche, assicurazioni, governi e grandi aziende per elaborare enormi quantità di dati. Possono gestire migliaia di utenti contemporaneamente e raramente vengono spenti." },
+  { id:6, category:"computer", question:"Perché il programma di deframmentazione migliora le prestazioni di un disco?", type:"single", options:["Ripulisce da eventuali bug che rallentano l'esecuzione dei programmi","Organizza i file del disco in funzione del loro uso","Accorpa i dati in settori vicini (contigui) sul disco"], correct:[2], explanation:"Quando scriviamo e cancelliamo file, i dati si 'frammentano': pezzi dello stesso file finiscono in settori lontani del disco. La deframmentazione li riorganizza in settori contigui, così la testina deve spostarsi meno, migliorando le prestazioni. Gli SSD moderni non ne hanno bisogno." },
+  { id:7, category:"computer", question:"Per spostare un file da una cartella ad un'altra dello stesso disco:", type:"single", options:["Basta trascinarne l'icona con il mouse","Durante il trascinamento occorre tenere premuto il tasto CTRL","Durante il trascinamento occorre tenere premuto il tasto MAIUSC","Durante il trascinamento occorre tenere premuto il tasto ALT"], correct:[0], explanation:"Su Windows, trascinare un file tra cartelle dello stesso disco lo SPOSTA automaticamente. Se vuoi COPIARLO (tenendo l'originale), trascina tenendo premuto CTRL. Se trascini tra dischi diversi, il comportamento predefinito è invece la copia." },
+  { id:8, category:"computer", question:"ASCII: (seleziona tutte le risposte corrette)", type:"multi", options:["Significa 'American Standard for Coding Input Information'","Significa 'American Standard Code for Information Interchange'","È un dispositivo connesso alla CPU che controlla il flusso delle informazioni in entrata","È un codice che permette di rappresentare i caratteri della tastiera con 8 bit di codice binario"], correct:[1,3], explanation:"ASCII (American Standard Code for Information Interchange) è uno standard di codifica dei caratteri con 7 bit (128 caratteri) o 8 bit nella versione estesa (256 caratteri). Ogni lettera, numero o simbolo ha un valore numerico corrispondente. Es.: 'A' maiuscola = 65." },
+  { id:9, category:"computer", question:"Cos'è un driver?", type:"single", options:["Un programma utilizzato per collegare/scollegare una periferica","Un programma utilizzato per la gestione delle connessioni remote","Un programma utilizzato per la gestione di una periferica","Un programma utilizzato unicamente su computer Macintosh"], correct:[2], explanation:"Un driver è un software che permette al sistema operativo di comunicare con una periferica hardware (stampante, scheda video, mouse, ecc.). Funge da 'traduttore' tra OS e dispositivo fisico. Senza il driver corretto, il dispositivo non funziona." },
+  { id:10, category:"computer", question:"Una componente fondamentale del computer, connessa all'unità di controllo I/O, che esegue miliardi di calcoli e operazioni logiche al secondo è chiamata:", type:"single", options:["Central Processing Unit (CPU)","Hard Disk (HD)","Random Access Memory (RAM)"], correct:[0], explanation:"La CPU (Central Processing Unit) è il 'cervello' del computer. Esegue istruzioni, calcoli aritmetici e operazioni logiche. Le CPU moderne hanno più core che lavorano in parallelo e raggiungono miliardi di operazioni al secondo (GHz)." },
+  { id:11, category:"computer", question:"Il trasferimento dati da/per Internet viene definito in termini di:", type:"single", options:["Download / Upload","Input / Output","LAN / ADSL"], correct:[0], explanation:"Download = dati da Internet al tuo dispositivo (es. scaricare un file). Upload = dati dal tuo dispositivo verso Internet (es. caricare una foto). La velocità si misura in bit al secondo (bps, Kbps, Mbps, Gbps)." },
+  { id:12, category:"computer", question:"I cookie sono:", type:"single", options:["File che si installano a nostra insaputa sul disco rigido","File di testo che memorizzano la cronologia di rete","Un particolare tipo di virus","File di testo che memorizzano informazioni sull'utente"], correct:[3], explanation:"I cookie sono piccoli file di testo salvati dal browser sul tuo dispositivo. Contengono preferenze, dati di sessione o carrello della spesa. Non sono virus. Alcuni cookie di terze parti (tracking) tracciano la navigazione a fini pubblicitari." },
+  { id:13, category:"computer", question:"Internet: (seleziona tutte le risposte corrette)", type:"multi", options:["Significa 'interactive network'","Significa 'interconnected networks'","È costituito da un insieme di computer eterogenei","È una rete globale singola ed omogenea"], correct:[1,2], explanation:"Internet ('interconnected networks') è una rete globale che connette miliardi di dispositivi eterogenei (computer, smartphone, server, ecc.) tramite protocolli comuni come TCP/IP. Non è una rete singola: è una 'rete di reti' composta da migliaia di reti diverse interconnesse." },
+  { id:14, category:"computer", question:"Uno dei protocolli di trasmissione delle informazioni più usati in Internet è chiamato:", type:"single", options:["WWW","URL","TCP-IP","HTML"], correct:[2], explanation:"TCP/IP è il protocollo fondamentale di Internet. TCP gestisce la suddivisione dei dati in pacchetti e ne controlla la consegna; IP si occupa dell'indirizzamento e dell'instradamento. WWW = pagine web, URL = indirizzo di una risorsa, HTML = linguaggio delle pagine web." },
+  { id:15, category:"computer", question:"Quando si invia una richiesta a un motore di ricerca:", type:"single", options:["L'informazione viene ricercata in un unico server centrale che contiene tutte le pagine","Si attivano programmi automatici (spider) che scansionano tutto il web in tempo reale","L'informazione richiesta viene cercata negli indici del motore di ricerca"], correct:[2], explanation:"I motori di ricerca costruiscono enormi indici del web usando spider/crawler (che scansionano continuamente il web in background). Quando fai una ricerca, la query viene confrontata con questi indici già pronti — non avviene nessuna scansione in tempo reale. Per questo i risultati arrivano in millisecondi." },
+  { id:16, category:"computer", question:"La RAM e la ROM sono collocate...", type:"single", options:["Sul disco rigido","Sulla scheda madre","Nessuna delle alternative presenti","Sulla scheda video"], correct:[1], explanation:"Sia la RAM (memoria temporanea di lavoro) che la ROM (memoria permanente di sola lettura, es. BIOS/UEFI) si trovano fisicamente sulla scheda madre. La RAM è inserita in appositi slot, la ROM è saldata direttamente sulla scheda." },
+  { id:17, category:"computer", question:"Il sistema operativo usato sul PC IBM è stato:", type:"single", options:["Linux","UNIX","DOS","OSX"], correct:[2], explanation:"Il DOS (Disk Operating System), sviluppato da Microsoft come MS-DOS, fu il sistema operativo principale dei PC IBM e compatibili negli anni '80 e '90. Era un sistema a riga di comando. Da esso derivò poi Windows. OSX è di Apple; Linux è open source." },
+  { id:18, category:"computer", question:"L'acronimo GUI sta per:", type:"single", options:["Graphical User Interface","Graphical Unit Image","Graphical Unit Internet","General User Interface"], correct:[0], explanation:"GUI (Graphical User Interface) è l'interfaccia grafica che permette di interagire col computer tramite icone, finestre e menu, invece di digitare comandi testuali. Windows, macOS e i moderni OS usano GUI. L'alternativa testuale si chiama CLI (Command Line Interface)." },
+  { id:19, category:"computer", question:"Per avere una panoramica della struttura del computer (dischi, stampanti, pennette USB) dove bisogna andare?", type:"single", options:["Tutte le informazioni sono reperibili sul desktop","Risorse del computer","Pannello di controllo"], correct:[1], explanation:"'Risorse del computer' (nelle versioni recenti chiamato 'Questo PC') mostra tutti i dispositivi di archiviazione connessi: hard disk, lettori CD/DVD, chiavette USB, ecc. Il Pannello di controllo serve per le impostazioni di sistema, non per navigare i dispositivi." },
+  { id:20, category:"computer", question:"Quale memoria del computer può essere paragonata alla memoria di lavoro?", type:"single", options:["L'hard disk","La memoria dei pen driver","La RAM"], correct:[2], explanation:"La RAM (Random Access Memory) è la memoria di lavoro: contiene i programmi e i dati in uso in quel momento. È velocissima ma volatile. Analogia: la CPU è il cervello, la RAM è la scrivania dove tieni i documenti aperti, l'hard disk è l'archivio dove li salvi." },
+  { id:21, category:"computer", question:"Il programma che consente la gestione della posta elettronica si chiama generalmente:", type:"single", options:["Server","Provider","Client"], correct:[2], explanation:"Un client di posta elettronica è un'applicazione che permette di leggere, scrivere e gestire le email (es. Outlook, Thunderbird, Apple Mail). Si chiama 'client' perché si collega ai server di posta (SMTP, IMAP, POP3) per scambiare i messaggi." },
+  { id:22, category:"computer", question:"Con il protocollo TCP/IP, un singolo file che deve essere inviato:", type:"single", options:["Viene suddiviso in tanti pacchetti di dati inviati singolarmente, con possibilità di reinviare quelli non recapitati","Viene suddiviso in due parti: header (recapito) e corpo (file), garantendo la consegna corretta","Viene inviato tutto insieme con un flusso continuo, velocizzando la trasmissione"], correct:[0], explanation:"TCP/IP suddivide i dati in piccoli 'pacchetti', ognuno con informazioni sull'indirizzo di destinazione. I pacchetti possono seguire percorsi diversi e vengono riassemblati a destinazione. TCP garantisce che i pacchetti persi vengano ritrasmessi: la rete è robusta e affidabile." },
+  { id:23, category:"computer", question:"Lo spazio di informazioni in cui siti, pagine e risorse sono condivise in rete, identificate da URL e connesse tramite ipertesti è chiamato:", type:"single", options:["World Wide Web","Hypertext Markup Language","Internet"], correct:[0], explanation:"Il World Wide Web (WWW) è il sistema di documenti ipertestuali collegati tra loro, accessibile tramite Internet. Inventato da Tim Berners-Lee nel 1989. Attenzione: Web e Internet non sono la stessa cosa! Internet è l'infrastruttura di rete; il Web è un servizio che gira su Internet." },
+  { id:24, category:"computer", question:"Il precursore di Internet:", type:"single", options:["Si chiamava Intranet, nato alla fine degli anni '60 per scopi di ricerca scientifica","Si chiamava Intranet, nato alla fine degli anni '30 per scopi di ricerca scientifica","Si chiamava Arpanet, nato alla fine degli anni '30 per scopi militari","Si chiamava Arpanet, nato alla fine degli anni '60 per scopi militari"], correct:[3], explanation:"ARPANET (Advanced Research Projects Agency Network) fu creato nel 1969 dal Dipartimento della Difesa USA durante la Guerra Fredda, con l'obiettivo di avere una rete resistente a un attacco nucleare. Da lì si sviluppò Internet. Le Intranet sono invece reti private aziendali." },
+  { id:25, category:"computer", question:"Le unità di memoria di massa sono contrassegnate da lettere maiuscole seguite da ':'. La lettera 'C:' a cosa si riferisce?", type:"single", options:["Alla pen drive","Al lettore CD/DVD","All'hard disk principale"], correct:[2], explanation:"In Windows, A: e B: erano riservate ai floppy disk (obsoleti). C: è tradizionalmente l'hard disk principale (dove è installato il sistema operativo). Le lettere successive (D:, E:, …) vengono usate per altri hard disk, partizioni, lettori CD/DVD e chiavette USB." },
+  { id:26, category:"computer", question:"Il phishing è:", type:"single", options:["Un attacco informatico per ottenere informazioni sensibili (es. numero di carta di credito) tramite messaggi che sembrano provenire da enti affidabili","Un attacco informatico che si avvale di applicazioni peer-to-peer e può mettere fuori uso il computer","Un attacco basato su un potente virus (phish) che ottiene tutte le informazioni sensibili presenti sul computer"], correct:[0], explanation:"Il Phishing (da 'fishing' = pescare) è una truffa in cui i criminali inviano email che sembrano provenire da banche, PayPal, Poste Italiane, ecc. per ingannare l'utente a inserire credenziali su siti falsi. Regola d'oro: non cliccare su link sospetti e verificare sempre il mittente reale." },
+  { id:27, category:"computer", question:"L'unità di informazione più piccola che può assumere il valore di 1 o 0 è chiamata:", type:"single", options:["Hertz","Bit","Byte"], correct:[1], explanation:"Il Bit (Binary digIT) è l'unità elementare di informazione in informatica. Può assumere solo due valori: 0 o 1 (sistema binario). Tutto ciò che un computer elabora è fatto di bit. 8 bit = 1 Byte, che può rappresentare 256 valori diversi (2⁸)." },
+  { id:28, category:"computer", question:"Posso creare una cartella durante la funzione 'Salva con nome'?", type:"single", options:["Vero","Falso"], correct:[0], explanation:"Sì! Nella finestra 'Salva con nome' è presente il pulsante 'Nuova cartella' che permette di creare una cartella direttamente, senza dover aprire il file manager separatamente. Funzione molto utile per organizzare i file al momento del salvataggio." },
+  { id:29, category:"computer", question:"La RAM:", type:"single", options:["È una memoria permanente di sola lettura (non può essere modificata)","È una memoria duratura (viene conservata anche quando si spegne il PC)","È una memoria temporanea (viene cancellata quando si spegne il PC)"], correct:[2], explanation:"La RAM (Random Access Memory) è volatile: perde tutti i dati quando il computer viene spento o riavviato. Per questo è essenziale salvare il lavoro su disco. La ROM invece è permanente e non volatile. Confondere RAM e ROM è un errore molto comune!" },
+  { id:30, category:"computer", question:"Quale fra queste NON è una periferica di OUTPUT?", type:"single", options:["Mouse","Stampante","Schermo"], correct:[0], explanation:"Il Mouse è una periferica di INPUT: fornisce dati al computer (posizione e clic). Le periferiche di output portano informazioni dal computer all'utente: la Stampante produce documenti fisici, lo Schermo visualizza le immagini. Tastiera, microfono e webcam sono altri esempi di input." },
+  { id:31, category:"computer", question:"Agendo sul BIOS è possibile:", type:"single", options:["Modificare l'ordine di lettura dei dischi del PC all'avvio","Cambiare la data di creazione di un file","Leggere il codice macchina di un particolare file"], correct:[0], explanation:"Il BIOS (Basic Input/Output System) è il firmware della scheda madre che si avvia prima del sistema operativo. Permette di configurare l'hardware di base: ordine di boot dei dischi, velocità del clock, impostazioni RAM, ecc. Funzione comune: impostare il boot da USB per installare un OS." },
+  { id:32, category:"computer", question:"Firefox è:", type:"single", options:["Un motore di ricerca","Un'applicazione peer-to-peer","Un browser"], correct:[2], explanation:"Mozilla Firefox è un browser web, cioè un programma per navigare Internet che interpreta il codice HTML delle pagine web. Altri browser: Chrome, Safari, Edge. Attenzione: Google è un motore di ricerca, Chrome è il browser di Google. Firefox usa Google o DuckDuckGo come motore." },
+  { id:33, category:"computer", question:"In Word la combinazione di tasti 'Ctrl+X' è usata per copiare un paragrafo (o una sua parte):", type:"single", options:["Vero","Falso"], correct:[1], explanation:"Falso! Ctrl+X è il comando TAGLIA (Cut): rimuove il testo selezionato e lo mette negli appunti. Ctrl+C è COPIA (Copy): copia senza rimuovere. Ctrl+V è INCOLLA (Paste). Aiuto mnemonico: X = forbici (taglia), C = Copia, V = incolla (metti giù)." },
+  { id:34, category:"computer", question:"Quale tasto devi premere per selezionare con il mouse più file (anche) non contigui?", type:"single", options:["ALT","ALT GR","CTRL","MAIUSC"], correct:[2], explanation:"Tenendo CTRL mentre si clicca si selezionano file non adiacenti uno per uno. MAIUSC invece seleziona un intervallo contiguo di file (dal primo all'ultimo cliccato). ALT e ALT GR non hanno questa funzione nella gestione file." },
+  { id:35, category:"computer", question:"Individua la definizione SCORRETTA:", type:"single", options:["XLS è l'estensione di PowerPoint","DOC è l'estensione di Word","TIFF è l'estensione di un file grafico","RAR è l'estensione di un file compresso","MDB è l'estensione standard di Access"], correct:[0], explanation:"XLS (e il più recente XLSX) è l'estensione di Microsoft Excel (fogli di calcolo), NON di PowerPoint! Le presentazioni PowerPoint hanno estensione PPT o PPTX. Le altre sono tutte corrette: DOC/DOCX = Word, TIFF = immagine raster, RAR = archivio compresso, MDB/ACCDB = Access." },
+  { id:36, category:"word", question:"Se nel documento Word devono comparire elenchi puntati o numerati, è assolutamente necessario attivare la funzionalità prima di digitare il testo:", type:"single", options:["Vero","Falso"], correct:[1], explanation:"Falso! In Word puoi prima digitare il testo, selezionarlo e poi applicare l'elenco puntato o numerato. Puoi anche attivare l'elenco prima di digitare, ma non è obbligatorio. La formattazione può essere applicata in qualsiasi momento." },
+  { id:37, category:"word", question:"In Word cosa succede se premo F1?", type:"single", options:["Si attiva il correttore ortografico","Si apre l'help di Word","Nulla"], correct:[1], explanation:"F1 è il tasto universale della Guida in quasi tutte le applicazioni Windows. In Word apre il pannello della Guida. Altri tasti funzione: F5 = Vai a, F7 = Controllo ortografia, F12 = Salva con nome. Ctrl+Z = Annulla, Ctrl+Y = Ripristina." },
+  { id:38, category:"word", question:"Se voglio importare una parte di testo da Wikipedia senza formattazione, quale opzione mi interessa?", type:"single", options:["Inserisci collegamento ipertestuale","Inserisci casella di testo","Incolla speciale"], correct:[2], explanation:"'Incolla speciale' (Ctrl+Alt+V) permette di scegliere il formato di incollaggio. Selezionando 'Testo non formattato' si incolla il contenuto senza i colori, font o stili del sito originale. Utilissimo quando si copiano testi da web o altri documenti con formattazione diversa." },
+  { id:39, category:"word", question:"In Word, se voglio modificare l'interlinea del testo, in quale menù devo cercare?", type:"single", options:["Formato","Paragrafo","Modifica"], correct:[1], explanation:"Le impostazioni di interlinea si trovano nelle opzioni Paragrafo: scheda 'Home' > gruppo 'Paragrafo' > icona interlinea, oppure clic destro > 'Paragrafo'. Puoi scegliere interlinea singola, doppia, 1.5 o valori personalizzati in punti o centimetri." },
+  { id:40, category:"word", question:"Per generare automaticamente un indice in Word devo:", type:"single", options:["Usare gli stili e selezionare il comando nel menù 'Inserisci'","Usare gli stili e selezionare il comando nel menù 'Riferimenti'","Usare gli elenchi puntati/numerati e selezionare il comando nel menù 'Inserisci'","Usare gli elenchi puntati/numerati e selezionare il comando nel menù 'Riferimenti'"], correct:[1], explanation:"Per creare un indice automatico: prima applica gli Stili ai titoli (Titolo 1, Titolo 2, ecc.), poi vai in 'Riferimenti' > 'Sommario' e scegli il formato. Word genera l'indice con i numeri di pagina. Se modifichi il documento, aggiorna l'indice con clic destro > 'Aggiorna campo'." },
+  { id:41, category:"word", question:"Word non permette la creazione di tabelle: bisogna necessariamente usare Excel e poi copiare/incollare:", type:"single", options:["Vero","Falso"], correct:[1], explanation:"Falso! Word ha una funzione integrata per creare tabelle: menù 'Inserisci' > 'Tabella'. Puoi creare tabelle direttamente in Word, scegliere dimensioni, formati e stili. Excel è preferibile solo per tabelle con calcoli complessi; per tabelle semplici Word è più che sufficiente." },
+  { id:42, category:"word", question:"In Excel, se voglio fare riferimento sempre e solo a una cella fissa (es. C11), dovrò:", type:"single", options:["Utilizzare il punto esclamativo: C11!","Utilizzare il punto esclamativo: !C!11","Utilizzare il simbolo del dollaro: C11$","Utilizzare il simbolo del dollaro: $C$11"], correct:[3], explanation:"In Excel, $C$11 crea un 'riferimento assoluto': quando copi la formula in altre celle, il riferimento a C11 rimane fisso. Senza $, il riferimento è relativo e si sposta con la formula. $C11 blocca solo la colonna, C$11 solo la riga." },
+  { id:43, category:"word", question:"In Word, se voglio incollare un'immagine e posizionarla liberamente sulla pagina, alla voce disposizione testo devo selezionare:", type:"single", options:["Posizione libera","In linea con il testo","Davanti al testo"], correct:[2], explanation:"'Davanti al testo' (wrapping non inline) permette di trascinare l'immagine liberamente sulla pagina. 'In linea con il testo' inserisce l'immagine come se fosse un carattere di testo (non spostabile liberamente). Per posizionarla dove vuoi, devi uscire dalla modalità 'In linea con il testo'." },
+  { id:44, category:"word", question:"In Word, se voglio scrivere 'R²' (R al quadrato), in quale menù devo andare?", type:"single", options:["Nel menù 'Paragrafo' > Apice","Nel menù 'Carattere' > Apice","Nel menù 'Layout di pagina'"], correct:[1], explanation:"L'Apice (superscript) si trova nelle opzioni del Carattere: Home > gruppo 'Carattere' > pulsante 'x²'. In alternativa usa Ctrl+Maiusc+= per attivare/disattivare l'apice. Il Pedice (es. H₂O) si attiva con Ctrl+=. Scrivi il numero, poi selezionalo e applica l'apice." },
+  { id:45, category:"word", question:"In Word, in quale menù si trova la funzione 'Intestazione e piè di pagina'?", type:"single", options:["Revisione","Inserisci","Riferimento","Home"], correct:[1], explanation:"Intestazione e piè di pagina si inseriscono da 'Inserisci' > gruppo 'Intestazione e piè di pagina'. Cliccando si sceglie un modello o si crea un'intestazione personalizzata. Si attiva poi la scheda contestuale 'Strumenti intestazione e piè di pagina' con opzioni aggiuntive." }
+];
+
+// ── State ──
+let displayQ = [], idx = 0, selected = [], checked = false, score = 0, isCorrect = false;
+
+function show(id) {
+  ['start-screen','quiz-screen','done-screen'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.style.display = (id === 'start-screen') ? 'flex' : (id === 'done-screen') ? 'flex' : 'block';
+}
+
+function showStart() { show('start-screen'); }
+
+function startQuiz(mode) {
+  displayQ = mode === 'shuffle' ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+  idx = 0; selected = []; checked = false; score = 0;
+  show('quiz-screen');
+  render();
+}
+
+function render() {
+  const q = displayQ[idx];
+  const total = displayQ.length;
+  const progress = (idx / total) * 100;
+  const isMulti = q.type === 'multi';
+  const catColor = q.category === 'computer' ? '#2563EB' : '#7C3AED';
+  const catLabel = q.category === 'computer' ? '🖥️ Teoria del Computer' : '📝 Word & Tastiera';
+
+  document.getElementById('q-counter').innerHTML = `${idx+1} <span style="color:#CBD5E1">/ ${total}</span>`;
+  document.getElementById('q-score').textContent = `✓ ${score} corrette`;
+  document.getElementById('progress-fill').style.width = progress + '%';
+
+  const catHeader = document.getElementById('cat-header');
+  catHeader.style.background = catColor;
+  document.getElementById('cat-label').textContent = catLabel;
+  const mb = document.getElementById('multi-badge');
+  mb.style.display = isMulti ? 'inline-block' : 'none';
+
+  document.getElementById('question-text').textContent = q.question;
+
+  // Options
+  const box = document.getElementById('options-box');
+  box.innerHTML = '';
+  (q.options || []).forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.onclick = () => handleSelect(i);
+
+    const sel = selected.includes(i);
+    const isRight = q.correct && q.correct.includes(i);
+
+    let indicator = sel ? (isMulti ? '■' : '●') : (isMulti ? '□' : '○');
+    let indColor = sel ? catColor : '#CBD5E1';
+
+    if (!checked) {
+      btn.style.borderColor = sel ? catColor : '#E2E8F0';
+      btn.style.background = sel ? catColor + '18' : '#fff';
+    } else {
+      if (isRight && sel) { btn.style.borderColor = '#059669'; btn.style.background = '#ECFDF5'; indicator = '✓'; indColor = '#059669'; }
+      else if (isRight) { btn.style.borderColor = '#34D399'; btn.style.background = '#F0FDF4'; indicator = '✓'; indColor = '#059669'; }
+      else if (sel) { btn.style.borderColor = '#FCA5A5'; btn.style.background = '#FEF2F2'; indicator = '✗'; indColor = '#DC2626'; }
+      else { btn.style.borderColor = '#E2E8F0'; btn.style.background = '#fff'; btn.style.opacity = '0.5'; }
+      btn.style.cursor = 'default';
+    }
+
+    btn.innerHTML = `<span class="opt-indicator" style="color:${indColor}">${indicator}</span><span class="opt-text">${opt}</span>`;
+    box.appendChild(btn);
+  });
+
+  // Explanation
+  const expBox = document.getElementById('explanation-box');
+  if (checked) {
+    expBox.style.display = 'block';
+    const bgColor = isCorrect ? '#ECFDF5' : '#FFF7ED';
+    const borderColor = isCorrect ? '#A7F3D0' : '#FED7AA';
+    const titleColor = isCorrect ? '#065F46' : '#92400E';
+    expBox.style.cssText = `display:block; margin:0 1.25rem 1rem; padding:1rem; border-radius:1rem; background:${bgColor}; border:1px solid ${borderColor};`;
+    expBox.innerHTML = `<p class="explanation-title" style="color:${titleColor}">${isCorrect ? '✅ Risposta corretta!' : '❌ Non esatto'}</p><p class="explanation-text">💡 ${q.explanation}</p>`;
+  } else {
+    expBox.style.display = 'none';
+  }
+
+  // Action button
+  const actionBtn = document.getElementById('action-btn');
+  if (!checked) {
+    actionBtn.textContent = 'Verifica risposta';
+    actionBtn.disabled = selected.length === 0;
+    actionBtn.style.background = selected.length ? catColor : '#E2E8F0';
+  } else {
+    actionBtn.disabled = false;
+    actionBtn.textContent = (idx + 1 >= total) ? 'Vedi risultati 🏆' : 'Prossima domanda →';
+    actionBtn.style.background = catColor;
+  }
+
+  // Footer
+  document.getElementById('quiz-footer').textContent =
+    `Categoria: ${q.category === 'computer' ? 'Computer' : 'Word & Tastiera'} · Domanda ${idx+1} di ${total}`;
+}
+
+function handleSelect(i) {
+  if (checked) return;
+  const q = displayQ[idx];
+  const isMulti = q.type === 'multi';
+  if (isMulti) {
+    selected = selected.includes(i) ? selected.filter(x => x !== i) : [...selected, i];
+  } else {
+    selected = [i];
+  }
+  render();
+}
+
+function handleAction() {
+  if (!checked) {
+    // Verify
+    const q = displayQ[idx];
+    const ok = JSON.stringify([...selected].sort((a,b)=>a-b)) === JSON.stringify([...q.correct].sort((a,b)=>a-b));
+    isCorrect = ok;
+    if (ok) score++;
+    checked = true;
+    render();
+  } else {
+    // Next
+    const total = displayQ.length;
+    if (idx + 1 >= total) {
+      showDone();
+    } else {
+      idx++;
+      selected = [];
+      checked = false;
+      render();
+    }
+  }
+}
+
+function showDone() {
+  show('done-screen');
+  const total = displayQ.length;
+  const pct = Math.round((score / total) * 100);
+  const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '💪' : '📖';
+  const msg = pct >= 80 ? 'Ottimo! Sei pronto per il test.' : pct >= 60 ? 'Buono! Ancora un po\' di pratica.' : 'Continua a studiare, ci arriverai!';
+  const color = pct >= 80 ? '#059669' : pct >= 60 ? '#D97706' : '#DC2626';
+
+  document.getElementById('done-emoji').textContent = emoji;
+  document.getElementById('done-score').textContent = `${score}/${total}`;
+  document.getElementById('done-score').style.color = color;
+  document.getElementById('done-pct').textContent = `${pct}% corretto`;
+  const bar = document.getElementById('done-bar');
+  bar.style.background = color;
+  setTimeout(() => { bar.style.width = pct + '%'; }, 50);
+  document.getElementById('done-msg').textContent = msg;
+}
+</script>
+</body>
+</html>
