@@ -546,8 +546,24 @@ function updateStartScreenStats() {
 /* ─────────────────────────────────────────────
    QUIZ LOGIC
 ───────────────────────────────────────────── */
+
+// Shuffle the answer options of a single question, keeping correct[] in sync
+function shuffleOptions(q) {
+  const pairs = q.options.map((opt, i) => ({ opt, isCorrect: q.correct.includes(i) }));
+  for (let i = pairs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+  }
+  return {
+    ...q,
+    options: pairs.map(p => p.opt),
+    correct: pairs.map((p, i) => p.isCorrect ? i : -1).filter(i => i !== -1)
+  };
+}
+
 function startQuiz(mode) {
-  displayQ = mode === 'shuffle' ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+  const base = mode === 'shuffle' ? [...questions].sort(() => Math.random() - 0.5) : [...questions];
+  displayQ = base.map(shuffleOptions); // randomise options order for every question
   idx = 0; selected = []; checked = false; score = 0; sessionWrongs = [];
   show('quiz-screen');
   render();
