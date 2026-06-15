@@ -18,7 +18,7 @@ Funziona direttamente nel browser, **senza installazioni** e **senza connessione
 
 ## 🌐 Demo live
 
-👉 **[Apri il quiz]([https://t-ivan2.github.io/Flashcard-quiz---Esame-informatica---Psicobiologia/](https://t-ivan2.github.io/Flashcard-quiz-Esame_Informatica_Facolta_Psicobiologia_L-24/)**
+👉 **[Apri il quiz]([(https://t-ivan2.github.io/Flashcard-quiz-Esame_Informatica_Facolta_Psicobiologia_L-24/])**
 
 ---
 
